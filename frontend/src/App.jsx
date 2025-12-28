@@ -4,6 +4,7 @@ import SafetyReport from './components/SafetyReport';
 import LangChainReport from './components/LangChainReport';
 import { analyzeSQL, validateSQL } from './services/api';
 import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import logo from './assets/logo.png';
 import './App.css';
 
 function App() {
@@ -96,7 +97,10 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1>🛡️ SafeSheet</h1>
+          <div className="logo-container">
+            <img src={logo} alt="SafeSheet Logo" className="logo-image" />
+            <h1>SafeSheet</h1>
+          </div>
           <p>SQL Safety Analysis & Rollback Generation</p>
         </div>
       </header>
