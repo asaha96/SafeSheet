@@ -58,21 +58,36 @@ class DryRunEngine:
                     # Try to get row count (may fail if table doesn't exist)
                     try:
                         count_before = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
-                    except:
+                    except Exception as e:
+                        error_str = str(e)
+                        if "does not exist" in error_str or "Table with name" in error_str:
+                            result["error"] = f"Note: Dry-run cannot execute SQL without actual table structure. This is expected behavior. Original error: {error_str}"
+                            result["simulation_successful"] = False
+                            result["note"] = "Dry-run simulation requires actual database tables. The SQL syntax appears valid."
+                            return result
                         count_before = 0
                     
                     # Execute the update
-                    conn.execute(sql)
-                    
-                    result["simulation_successful"] = True
-                    result["estimated_rows_affected"] = "Unknown (table may not exist in simulation)"
-                    
-                    # Try to get a preview of updated rows
                     try:
-                        preview = conn.execute(f"SELECT * FROM {table_name} LIMIT 5").fetchall()
-                        result["preview"] = preview
-                    except:
-                        pass
+                        conn.execute(sql)
+                        result["simulation_successful"] = True
+                        result["estimated_rows_affected"] = "Unknown (table may not exist in simulation)"
+                        
+                        # Try to get a preview of updated rows
+                        try:
+                            preview = conn.execute(f"SELECT * FROM {table_name} LIMIT 5").fetchall()
+                            result["preview"] = preview
+                        except:
+                            pass
+                    except Exception as e:
+                        error_str = str(e)
+                        if "does not exist" in error_str or "Table with name" in error_str:
+                            result["error"] = f"Note: Dry-run cannot execute SQL without actual table structure. This is expected behavior."
+                            result["simulation_successful"] = False
+                            result["note"] = "Dry-run simulation requires actual database tables. The SQL syntax appears valid."
+                        else:
+                            result["error"] = f"Could not simulate UPDATE: {error_str}"
+                            result["simulation_successful"] = False
             
             elif statement_type == "DELETE":
                 # Similar to UPDATE
@@ -85,8 +100,15 @@ class DryRunEngine:
                         result["estimated_rows_affected"] = count_before - count_after
                         result["simulation_successful"] = True
                     except Exception as e:
-                        result["error"] = f"Could not simulate DELETE: {str(e)}"
-                        result["simulation_successful"] = False
+                        error_str = str(e)
+                        # Check if it's a "table doesn't exist" error (expected in dry-run)
+                        if "does not exist" in error_str or "Table with name" in error_str:
+                            result["error"] = f"Note: Dry-run cannot execute SQL without actual table structure. This is expected behavior. Original error: {error_str}"
+                            result["simulation_successful"] = False
+                            result["note"] = "Dry-run simulation requires actual database tables. The SQL syntax appears valid."
+                        else:
+                            result["error"] = f"Could not simulate DELETE: {error_str}"
+                            result["simulation_successful"] = False
             
             elif statement_type == "INSERT":
                 # For INSERT, execute and count

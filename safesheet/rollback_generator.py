@@ -32,7 +32,7 @@ class RollbackGenerator:
     def _generate_with_anthropic(self, original_sql: str) -> str:
         """Generate rollback using Anthropic Claude."""
         try:
-            from anthropic import Anthropic
+            from anthropic import Anthropic, APIError
         except ImportError:
             raise ImportError("anthropic package not installed. Install with: pip install anthropic")
 
@@ -40,18 +40,30 @@ class RollbackGenerator:
         
         prompt = self._build_prompt(original_sql)
         
-        message = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=2048,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
-        )
-        
-        rollback_sql = message.content[0].text.strip()
+        try:
+            message = client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=2048,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+            
+            rollback_sql = message.content[0].text.strip()
+        except APIError as e:
+            # Handle specific Anthropic API errors
+            if e.status_code == 429:
+                raise ValueError(
+                    f"Anthropic API quota exceeded. Please check your billing at https://console.anthropic.com/. "
+                    f"Error: {str(e)}"
+                )
+            elif e.status_code == 401:
+                raise ValueError("Invalid Anthropic API key. Please check your API key in .env file.")
+            else:
+                raise ValueError(f"Anthropic API error: {str(e)}")
         
         # Extract SQL from code blocks if present
         if "```" in rollback_sql:
@@ -71,7 +83,7 @@ class RollbackGenerator:
     def _generate_with_openai(self, original_sql: str) -> str:
         """Generate rollback using OpenAI GPT-4."""
         try:
-            from openai import OpenAI
+            from openai import OpenAI, APIError
         except ImportError:
             raise ImportError("openai package not installed. Install with: pip install openai")
 
@@ -79,23 +91,36 @@ class RollbackGenerator:
         
         prompt = self._build_prompt(original_sql)
         
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a SQL expert specializing in generating idempotent rollback scripts."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.1,
-            max_tokens=2048
-        )
-        
-        rollback_sql = response.choices[0].message.content.strip()
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a SQL expert specializing in generating idempotent rollback scripts."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.1,
+                max_tokens=2048
+            )
+            
+            rollback_sql = response.choices[0].message.content.strip()
+        except APIError as e:
+            # Handle specific OpenAI API errors
+            if e.status_code == 429:
+                error_msg = e.response.json() if hasattr(e, 'response') else str(e)
+                raise ValueError(
+                    f"OpenAI API quota exceeded. Please check your billing at https://platform.openai.com/account/billing. "
+                    f"Error: {error_msg}"
+                )
+            elif e.status_code == 401:
+                raise ValueError("Invalid OpenAI API key. Please check your API key in .env file.")
+            else:
+                raise ValueError(f"OpenAI API error: {str(e)}")
         
         # Extract SQL from code blocks if present
         if "```" in rollback_sql:

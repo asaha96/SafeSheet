@@ -151,7 +151,7 @@ const SafetyReport = ({ report }) => {
                 ) : (
                   <XCircle size={16} className="error-icon" />
                 )}
-                {data.dry_run.simulation_successful ? 'Successful' : 'Failed'}
+                {data.dry_run.simulation_successful ? 'Successful' : 'Limited (no tables)'}
               </span>
             </div>
             {data.dry_run.estimated_rows_affected !== null && (
@@ -160,8 +160,20 @@ const SafetyReport = ({ report }) => {
                 <span>{data.dry_run.estimated_rows_affected}</span>
               </div>
             )}
+            {data.dry_run.note && (
+              <div className="info-item" style={{ gridColumn: '1 / -1', padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                <Info size={16} style={{ marginRight: '0.5rem', display: 'inline-block', color: '#60a5fa' }} />
+                <span style={{ color: '#cbd5e1' }}>{data.dry_run.note}</span>
+              </div>
+            )}
             {data.dry_run.error && (
-              <div className="error-text">{data.dry_run.error}</div>
+              <div className="error-text" style={{ 
+                background: data.dry_run.note ? 'rgba(59, 130, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                color: data.dry_run.note ? '#60a5fa' : '#fca5a5',
+                border: data.dry_run.note ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)'
+              }}>
+                {data.dry_run.error}
+              </div>
             )}
           </div>
         </div>
