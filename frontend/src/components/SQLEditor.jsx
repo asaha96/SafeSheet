@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { loader } from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
@@ -8,6 +8,13 @@ loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/
 
 const SQLEditor = ({ value, onChange, onAnalyze, isLoading }) => {
   const [sql, setSql] = useState(value || '');
+
+  // Sync with external value changes (e.g., when example buttons are clicked)
+  useEffect(() => {
+    if (value !== undefined && value !== sql) {
+      setSql(value || '');
+    }
+  }, [value]);
 
   const handleEditorChange = (newValue) => {
     setSql(newValue || '');
@@ -55,6 +62,7 @@ const SQLEditor = ({ value, onChange, onAnalyze, isLoading }) => {
         <Editor
           height="400px"
           defaultLanguage="sql"
+          language="sql"
           value={sql}
           onChange={handleEditorChange}
           onMount={(editor) => {

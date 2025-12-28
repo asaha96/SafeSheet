@@ -78,12 +78,18 @@ function App() {
     },
   ];
 
-  const loadExample = (exampleSql) => {
+  const loadExample = async (exampleSql) => {
     setSql(exampleSql);
     setError(null);
     setLangchainError(null);
     setReport(null);
     setLangchainReport(null);
+    
+    // Automatically analyze the example query
+    // Small delay to ensure state is updated
+    setTimeout(() => {
+      handleAnalyze(exampleSql);
+    }, 100);
   };
 
   return (
