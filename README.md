@@ -12,6 +12,7 @@ SafeSheet is a comprehensive SQL safety analysis tool designed for data engineer
 - **🔍 SQL Parsing**: Uses `sqlglot` to identify impact radius (affected tables/columns)
 - **⚠️ Risk Assessment**: Automatically flags high-risk operations (ALTER, DROP, TRUNCATE)
 - **🔄 Rollback Generation**: Uses LLM (Claude 3.5 or GPT-4o) to generate idempotent inverse SQL scripts
+- **🤖 LangChain Integration**: Alternative AI-powered validation using LangChain LCEL chains for enhanced analysis
 - **🧪 Dry Run**: Simulates SQL changes using in-memory DuckDB
 - **📊 Safety Reports**: Comprehensive reports with risk levels, impact analysis, and rollback scripts
 - **🎯 Explainability**: Every safety warning explains *why* it is dangerous
@@ -46,7 +47,7 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-> **Note**: Rollback generation requires an API key, but other features (parsing, risk assessment, dry-run) work without it.
+> **Note**: Rollback generation and LangChain validation require an API key, but other features (parsing, risk assessment, dry-run) work without it.
 
 ## 📖 Usage
 
@@ -65,6 +66,10 @@ OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 Open `http://localhost:5173` in your browser!
+
+**Toggle between analysis modes:**
+- **Traditional Analysis**: Rule-based risk assessment with sqlglot parsing
+- **LangChain Validation**: AI-powered analysis using LangChain LCEL chains (toggle checkbox in UI)
 
 ### Command Line Interface
 
@@ -175,17 +180,59 @@ SafeSheet/
 │   ├── safety_report.py       # Report generator
 │   └── cli.py                 # Command-line interface
 ├── backend/            # FastAPI backend
-│   ├── main.py         # API server
+│   ├── main.py                 # API server
+│   ├── langchain_validator.py # LangChain LCEL validation chain
 │   └── requirements.txt
 ├── frontend/           # React frontend
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── SQLEditor.jsx
-│   │   │   └── SafetyReport.jsx
+│   │   │   ├── SafetyReport.jsx
+│   │   │   └── LangChainReport.jsx
 │   │   └── App.jsx
 │   └── package.json
 └── examples/           # Example queries and usage
 ```
+
+## 🤖 What is LangChain Used For?
+
+LangChain is used in SafeSheet to provide an **AI-powered alternative validation method** that complements the traditional rule-based analysis. Here's how it works:
+
+### LangChain's Role:
+
+1. **Structured AI Pipeline (LCEL Chain)**:
+   - Creates a composable chain: `Prompt → LLM → JSON Parser`
+   - Ensures consistent, structured output from the LLM
+
+2. **Enhanced SQL Analysis**:
+   - Takes SQL statement + database schema context
+   - Sends to LLM (GPT-4o or Claude 3.5) for intelligent analysis
+   - Generates risk assessment, warnings, and rollback scripts
+
+3. **DuckDB Integration**:
+   - Validates SQL syntax with DuckDB before LLM processing
+   - Includes validation results in the prompt for better context
+
+4. **Structured Output**:
+   - Uses `JsonOutputParser` to ensure the LLM returns valid JSON
+   - Returns: `risk_level`, `warnings[]`, and `rollback_sql`
+
+### Why Use LangChain?
+
+- **More Nuanced Analysis**: LLMs can understand context and provide more sophisticated risk assessments
+- **Better Rollback Scripts**: AI can generate more accurate rollback SQL based on understanding the operation
+- **Schema-Aware**: Uses mock database schema to provide better context to the LLM
+- **Flexible**: Easy to switch between OpenAI and Anthropic models
+
+### Traditional vs LangChain:
+
+| Feature | Traditional Analysis | LangChain Validation |
+|---------|---------------------|---------------------|
+| **Method** | Rule-based parsing | AI-powered analysis |
+| **Speed** | Fast | Slower (API calls) |
+| **Cost** | Free | Requires API credits |
+| **Accuracy** | Good for common cases | Better for complex scenarios |
+| **Context** | SQL structure only | SQL + schema context |
 
 ## 🔧 Requirements
 
@@ -198,6 +245,9 @@ SafeSheet/
 - rich >= 13.7.0
 - typer >= 0.12.0
 - fastapi >= 0.104.0 (for backend)
+- langchain >= 0.1.0 (optional, for LangChain validation)
+- langchain-openai >= 0.0.5 (optional, for OpenAI integration)
+- langchain-anthropic >= 0.1.0 (optional, for Anthropic integration)
 - React 18+ (for frontend)
 
 ## 📝 Examples
@@ -217,6 +267,7 @@ python test_basic.py
 
 - [Quick Start Guide](QUICKSTART.md) - Detailed setup and usage
 - [Frontend Documentation](README_FRONTEND.md) - Web interface setup
+- [LangChain Integration](LANGCHAIN_INTEGRATION.md) - Detailed LangChain implementation guide
 
 ## 🤝 Contributing
 
@@ -230,6 +281,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - [sqlglot](https://github.com/tobymao/sqlglot) for SQL parsing
 - [DuckDB](https://duckdb.org/) for in-memory SQL simulation
+- [LangChain](https://www.langchain.com/) for AI orchestration and LCEL chains
 - [Anthropic](https://www.anthropic.com/) and [OpenAI](https://openai.com/) for LLM capabilities
 - [FastAPI](https://fastapi.tiangolo.com/) for the backend API
 - [React](https://react.dev/) and [Vite](https://vite.dev/) for the frontend
