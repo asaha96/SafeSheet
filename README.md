@@ -15,6 +15,8 @@ SafeSheet is a comprehensive SQL safety analysis tool designed for data engineer
 - **🧪 Dry Run**: Simulates SQL changes using in-memory DuckDB
 - **📊 Safety Reports**: Comprehensive reports with risk levels, impact analysis, and rollback scripts
 - **🎯 Explainability**: Every safety warning explains *why* it is dangerous
+- **🌐 Web Interface**: Modern React frontend with SQL editor and visual reports
+- **⚡ API**: FastAPI backend for programmatic access
 
 ## 🚀 Quick Start
 
@@ -22,11 +24,14 @@ SafeSheet is a comprehensive SQL safety analysis tool designed for data engineer
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/safesheet.git
-cd safesheet
+git clone https://github.com/asaha96/SafeSheet.git
+cd SafeSheet
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
+
+# Install frontend dependencies
+cd frontend && npm install && cd ..
 ```
 
 ### Configuration
@@ -44,6 +49,22 @@ OPENAI_API_KEY=your_openai_api_key_here
 > **Note**: Rollback generation requires an API key, but other features (parsing, risk assessment, dry-run) work without it.
 
 ## 📖 Usage
+
+### Web Interface (Recommended)
+
+**Start Backend:**
+```bash
+./start_backend.sh
+# Or manually: cd backend && source ../venv/bin/activate && python main.py
+```
+
+**Start Frontend:**
+```bash
+./start_frontend.sh
+# Or manually: cd frontend && npm run dev
+```
+
+Open `http://localhost:5173` in your browser!
 
 ### Command Line Interface
 
@@ -146,26 +167,38 @@ UPDATE users SET status = 'active' WHERE status = 'inactive';
 
 ```
 SafeSheet/
-├── safesheet/
+├── safesheet/          # Core library
 │   ├── parser.py              # SQL parsing with sqlglot
 │   ├── risk_assessor.py       # Risk assessment engine
 │   ├── rollback_generator.py  # LLM-powered rollback generation
 │   ├── dry_run.py             # DuckDB simulation engine
 │   ├── safety_report.py       # Report generator
 │   └── cli.py                 # Command-line interface
-├── examples/                  # Example queries and usage
-└── tests/                     # Test suite
+├── backend/            # FastAPI backend
+│   ├── main.py         # API server
+│   └── requirements.txt
+├── frontend/           # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── SQLEditor.jsx
+│   │   │   └── SafetyReport.jsx
+│   │   └── App.jsx
+│   └── package.json
+└── examples/           # Example queries and usage
 ```
 
 ## 🔧 Requirements
 
 - Python 3.8+
+- Node.js 16+ (for frontend)
 - sqlglot >= 24.0.0
 - duckdb >= 0.10.0
 - anthropic >= 0.34.0 (optional, for Claude)
 - openai >= 1.40.0 (optional, for GPT-4)
 - rich >= 13.7.0
 - typer >= 0.12.0
+- fastapi >= 0.104.0 (for backend)
+- React 18+ (for frontend)
 
 ## 📝 Examples
 
@@ -180,6 +213,11 @@ See the `examples/` directory for:
 python test_basic.py
 ```
 
+## 📚 Documentation
+
+- [Quick Start Guide](QUICKSTART.md) - Detailed setup and usage
+- [Frontend Documentation](README_FRONTEND.md) - Web interface setup
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -193,10 +231,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [sqlglot](https://github.com/tobymao/sqlglot) for SQL parsing
 - [DuckDB](https://duckdb.org/) for in-memory SQL simulation
 - [Anthropic](https://www.anthropic.com/) and [OpenAI](https://openai.com/) for LLM capabilities
-
-## 📚 Documentation
-
-For more detailed documentation, see [QUICKSTART.md](QUICKSTART.md).
+- [FastAPI](https://fastapi.tiangolo.com/) for the backend API
+- [React](https://react.dev/) and [Vite](https://vite.dev/) for the frontend
 
 ---
 
