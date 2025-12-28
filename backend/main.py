@@ -11,6 +11,7 @@ from pydantic import BaseModel
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from safesheet import analyze_sql, SafetyReport
+from backend.langchain_validator import validate_sql_with_langchain
 
 app = FastAPI(
     title="SafeSheet API",
@@ -36,10 +37,25 @@ class SQLAnalysisRequest(BaseModel):
     sample_data: Optional[Dict[str, list]] = None
 
 
+class SQLValidationRequest(BaseModel):
+    """Request model for LangChain SQL validation."""
+    sql: str
+
+
 class SQLAnalysisResponse(BaseModel):
     """Response model for SQL analysis."""
     success: bool
     data: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class SQLValidationResponse(BaseModel):
+    """Response model for LangChain SQL validation."""
+    success: bool
+    risk_level: Optional[str] = None
+    warnings: Optional[list] = None
+    rollback_sql: Optional[str] = None
+    duckdb_validation: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
 
 
@@ -51,6 +67,7 @@ async def root():
         "version": "0.1.0",
         "endpoints": {
             "/analyze": "POST - Analyze SQL statement",
+            "/validate-sql": "POST - Validate SQL using LangChain",
             "/health": "GET - Health check"
         }
     }
@@ -91,6 +108,43 @@ async def analyze_sql_endpoint(request: SQLAnalysisRequest):
         return SQLAnalysisResponse(
             success=False,
             error=f"Error analyzing SQL: {str(e)}"
+        )
+
+
+@app.post("/validate-sql", response_model=SQLValidationResponse)
+async def validate_sql_endpoint(request: SQLValidationRequest):
+    """Validate SQL using LangChain LCEL chain."""
+    try:
+        if not request.sql or not request.sql.strip():
+            raise HTTPException(status_code=400, detail="SQL statement cannot be empty")
+        
+        # Validate SQL using LangChain
+        result = await validate_sql_with_langchain(request.sql)
+        
+        if result.get("success"):
+            return SQLValidationResponse(
+                success=True,
+                risk_level=result.get("risk_level"),
+                warnings=result.get("warnings", []),
+                rollback_sql=result.get("rollback_sql", ""),
+                duckdb_validation=result.get("duckdb_validation")
+            )
+        else:
+            return SQLValidationResponse(
+                success=False,
+                error=result.get("error", "Unknown error during validation"),
+                duckdb_validation=result.get("duckdb_validation")
+            )
+    
+    except ValueError as e:
+        return SQLValidationResponse(
+            success=False,
+            error=f"Configuration error: {str(e)}"
+        )
+    except Exception as e:
+        return SQLValidationResponse(
+            success=False,
+            error=f"Error validating SQL: {str(e)}"
         )
 
 

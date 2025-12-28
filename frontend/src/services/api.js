@@ -30,6 +30,22 @@ export const analyzeSQL = async (sql, options = {}) => {
   }
 };
 
+export const validateSQL = async (sql) => {
+  try {
+    const response = await api.post('/validate-sql', {
+      sql,
+    });
+    
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || 
+      error.response?.data?.detail || 
+      'Failed to validate SQL'
+    );
+  }
+};
+
 export const healthCheck = async () => {
   try {
     const response = await api.get('/health');

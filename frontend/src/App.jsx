@@ -1,34 +1,61 @@
 import { useState } from 'react';
 import SQLEditor from './components/SQLEditor';
 import SafetyReport from './components/SafetyReport';
-import { analyzeSQL } from './services/api';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import LangChainReport from './components/LangChainReport';
+import { analyzeSQL, validateSQL } from './services/api';
+import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import './App.css';
 
 function App() {
   const [sql, setSql] = useState('');
   const [report, setReport] = useState(null);
+  const [langchainReport, setLangchainReport] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [langchainLoading, setLangchainLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [langchainError, setLangchainError] = useState(null);
   const [includeRollback, setIncludeRollback] = useState(true);
   const [includeDryRun, setIncludeDryRun] = useState(true);
+  const [useLangChain, setUseLangChain] = useState(false);
 
   const handleAnalyze = async (sqlToAnalyze) => {
-    setLoading(true);
-    setError(null);
+    if (useLangChain) {
+      handleLangChainValidate(sqlToAnalyze);
+    } else {
+      setLoading(true);
+      setError(null);
+      setReport(null);
+      setLangchainReport(null);
+
+      try {
+        const result = await analyzeSQL(sqlToAnalyze, {
+          includeRollback,
+          includeDryRun,
+        });
+        setReport(result);
+      } catch (err) {
+        setError(err.message || 'Failed to analyze SQL');
+        console.error('Analysis error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleLangChainValidate = async (sqlToAnalyze) => {
+    setLangchainLoading(true);
+    setLangchainError(null);
+    setLangchainReport(null);
     setReport(null);
 
     try {
-      const result = await analyzeSQL(sqlToAnalyze, {
-        includeRollback,
-        includeDryRun,
-      });
-      setReport(result);
+      const result = await validateSQL(sqlToAnalyze);
+      setLangchainReport(result);
     } catch (err) {
-      setError(err.message || 'Failed to analyze SQL');
-      console.error('Analysis error:', err);
+      setLangchainError(err.message || 'Failed to validate SQL with LangChain');
+      console.error('LangChain validation error:', err);
     } finally {
-      setLoading(false);
+      setLangchainLoading(false);
     }
   };
 
@@ -54,7 +81,9 @@ function App() {
   const loadExample = (exampleSql) => {
     setSql(exampleSql);
     setError(null);
+    setLangchainError(null);
     setReport(null);
+    setLangchainReport(null);
   };
 
   return (
@@ -72,19 +101,34 @@ function App() {
             <label className="checkbox-label">
               <input
                 type="checkbox"
-                checked={includeRollback}
-                onChange={(e) => setIncludeRollback(e.target.checked)}
+                checked={useLangChain}
+                onChange={(e) => setUseLangChain(e.target.checked)}
               />
-              <span>Generate Rollback Script</span>
+              <span>
+                <Sparkles size={16} style={{ marginRight: '0.5rem', display: 'inline-block' }} />
+                Use LangChain Validation
+              </span>
             </label>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={includeDryRun}
-                onChange={(e) => setIncludeDryRun(e.target.checked)}
-              />
-              <span>Enable Dry Run Simulation</span>
-            </label>
+            {!useLangChain && (
+              <>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={includeRollback}
+                    onChange={(e) => setIncludeRollback(e.target.checked)}
+                  />
+                  <span>Generate Rollback Script</span>
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={includeDryRun}
+                    onChange={(e) => setIncludeDryRun(e.target.checked)}
+                  />
+                  <span>Enable Dry Run Simulation</span>
+                </label>
+              </>
+            )}
           </div>
 
           <div className="examples-panel">
@@ -106,13 +150,13 @@ function App() {
             value={sql}
             onChange={setSql}
             onAnalyze={handleAnalyze}
-            isLoading={loading}
+            isLoading={loading || langchainLoading}
           />
 
-          {loading && (
+          {(loading || langchainLoading) && (
             <div className="loading-container">
               <Loader2 className="spinner" size={32} />
-              <p>Analyzing SQL...</p>
+              <p>{useLangChain ? 'Validating SQL with LangChain...' : 'Analyzing SQL...'}</p>
             </div>
           )}
 
@@ -123,7 +167,18 @@ function App() {
             </div>
           )}
 
-          {report && <SafetyReport report={report} />}
+          {langchainError && (
+            <div className="error-container">
+              <AlertCircle size={20} />
+              <p>{langchainError}</p>
+            </div>
+          )}
+
+          {report && !useLangChain && <SafetyReport report={report} />}
+
+          {langchainReport && useLangChain && (
+            <LangChainReport report={langchainReport} />
+          )}
         </div>
       </main>
 
