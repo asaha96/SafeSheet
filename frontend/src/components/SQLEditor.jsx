@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { loader } from '@monaco-editor/react';
+import { Loader2 } from 'lucide-react';
 
 // Configure Monaco Editor loader
 loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
@@ -38,7 +39,14 @@ const SQLEditor = ({ value, onChange, onAnalyze, isLoading }) => {
             disabled={!sql.trim() || isLoading}
             className="analyze-button"
           >
-            {isLoading ? 'Analyzing...' : 'Analyze SQL'}
+            {isLoading ? (
+              <>
+                <Loader2 size={16} style={{ marginRight: '0.5rem', display: 'inline-block' }} />
+                Analyzing...
+              </>
+            ) : (
+              'Analyze SQL'
+            )}
           </button>
           <span className="hint">Press Ctrl+Enter to analyze</span>
         </div>
