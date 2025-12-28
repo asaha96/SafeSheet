@@ -6,9 +6,15 @@ from typing import Optional, Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from dotenv import load_dotenv
+
+# Load .env file from project root
+project_root = Path(__file__).parent.parent
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # Add parent directory to path to import safesheet
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(project_root))
 
 from safesheet import analyze_sql, SafetyReport
 from backend.langchain_validator import validate_sql_with_langchain

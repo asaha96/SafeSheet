@@ -1,10 +1,14 @@
 """Configuration management for SafeSheet."""
 
 import os
+from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from project root (parent of safesheet directory)
+project_root = Path(__file__).parent.parent
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
 
 
 class Config:
