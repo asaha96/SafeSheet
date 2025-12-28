@@ -1,4 +1,4 @@
-# SafeSheet 🛡️
+# SafeSheet
 
 > A safety-first SQL tool that prevents accidental data loss and automates SQL rollbacks.
 
@@ -7,19 +7,19 @@
 
 SafeSheet is a comprehensive SQL safety analysis tool designed for data engineers and database administrators. It automatically analyzes SQL statements, assesses risk levels, generates rollback scripts, and simulates changes before execution.
 
-## ✨ Features
+## Features
 
-- **🔍 SQL Parsing**: Uses `sqlglot` to identify impact radius (affected tables/columns)
-- **⚠️ Risk Assessment**: Automatically flags high-risk operations (ALTER, DROP, TRUNCATE)
-- **🔄 Rollback Generation**: Uses LLM (Claude 3.5 or GPT-4o) to generate idempotent inverse SQL scripts
-- **🤖 LangChain Integration**: Alternative AI-powered validation using LangChain LCEL chains for enhanced analysis
-- **🧪 Dry Run**: Simulates SQL changes using in-memory DuckDB
-- **📊 Safety Reports**: Comprehensive reports with risk levels, impact analysis, and rollback scripts
-- **🎯 Explainability**: Every safety warning explains *why* it is dangerous
-- **🌐 Web Interface**: Modern React frontend with SQL editor and visual reports
-- **⚡ API**: FastAPI backend for programmatic access
+- **SQL Parsing**: Uses `sqlglot` to identify impact radius (affected tables/columns)
+- **Risk Assessment**: Automatically flags high-risk operations (ALTER, DROP, TRUNCATE)
+- **Rollback Generation**: Uses LLM (Claude 3.5 or GPT-4o) to generate idempotent inverse SQL scripts
+- **LangChain Integration**: Alternative AI-powered validation using LangChain LCEL chains for enhanced analysis
+- **Dry Run**: Simulates SQL changes using in-memory DuckDB
+- **Safety Reports**: Comprehensive reports with risk levels, impact analysis, and rollback scripts
+- **Explainability**: Every safety warning explains *why* it is dangerous
+- **Web Interface**: Modern React frontend with SQL editor and visual reports
+- **API**: FastAPI backend for programmatic access
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -49,7 +49,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 > **Note**: Rollback generation and LangChain validation require an API key, but other features (parsing, risk assessment, dry-run) work without it.
 
-## 📖 Usage
+## Usage
 
 ### Web Interface (Recommended)
 
@@ -118,7 +118,7 @@ formatted = report_gen.format_report(report)
 print(formatted)
 ```
 
-## 📋 Example Output
+## Example Output
 
 ```
 ================================================================================
@@ -156,19 +156,19 @@ Rollback Script:
 UPDATE users SET status = 'active' WHERE status = 'inactive';
 ```
 
-## 🎯 Core Principles
+## Core Principles
 
 1. **Safety First**: Never execute raw DDL/DML without validation
 2. **Idempotency**: All generated SQL (including rollbacks) is repeatable without side effects
 3. **Explainability**: Every safety warning explains *why* it is dangerous
 
-## 📊 Risk Levels
+## Risk Levels
 
-- **🟢 Low**: SELECT (read-only) or INSERT statements
-- **🟡 Medium**: UPDATE or DELETE statements
-- **🔴 High**: ALTER, DROP, or TRUNCATE statements
+- **Low**: SELECT (read-only) or INSERT statements
+- **Medium**: UPDATE or DELETE statements
+- **High**: ALTER, DROP, or TRUNCATE statements
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 SafeSheet/
@@ -194,7 +194,7 @@ SafeSheet/
 └── examples/           # Example queries and usage
 ```
 
-## 🤖 What is LangChain Used For?
+## What is LangChain Used For?
 
 LangChain is used in SafeSheet to provide an **AI-powered alternative validation method** that complements the traditional rule-based analysis. Here's how it works:
 
@@ -234,7 +234,7 @@ LangChain is used in SafeSheet to provide an **AI-powered alternative validation
 | **Accuracy** | Good for common cases | Better for complex scenarios |
 | **Context** | SQL structure only | SQL + schema context |
 
-## 🔧 Requirements
+## Requirements
 
 - Python 3.8+
 - Node.js 16+ (for frontend)
@@ -250,34 +250,34 @@ LangChain is used in SafeSheet to provide an **AI-powered alternative validation
 - langchain-anthropic >= 0.1.0 (optional, for Anthropic integration)
 - React 18+ (for frontend)
 
-## 📝 Examples
+## Examples
 
 See the `examples/` directory for:
 - `example_queries.sql` - Sample SQL statements for testing
 - `example_usage.py` - Python API usage examples
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run basic tests
 python test_basic.py
 ```
 
-## 📚 Documentation
+## Documentation
 
 - [Quick Start Guide](QUICKSTART.md) - Detailed setup and usage
 - [Frontend Documentation](README_FRONTEND.md) - Web interface setup
 - [LangChain Integration](LANGCHAIN_INTEGRATION.md) - Detailed LangChain implementation guide
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [sqlglot](https://github.com/tobymao/sqlglot) for SQL parsing
 - [DuckDB](https://duckdb.org/) for in-memory SQL simulation
