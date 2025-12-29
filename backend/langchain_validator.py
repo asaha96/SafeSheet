@@ -43,7 +43,19 @@ def get_llm():
     """Get the appropriate LLM based on available API keys."""
     provider = Config.get_llm_provider()
     
-    if provider == "openai" and OPENAI_AVAILABLE:
+    if provider == "deepseek" and OPENAI_AVAILABLE:
+        api_key = Config.get_deepseek_api_key()
+        endpoint = Config.get_deepseek_endpoint()
+        model = Config.get_deepseek_model()
+        if api_key:
+            return ChatOpenAI(
+                model=model,
+                temperature=0.1,
+                api_key=api_key,
+                base_url=endpoint
+            )
+    
+    elif provider == "openai" and OPENAI_AVAILABLE:
         api_key = Config.get_openai_api_key()
         if api_key:
             return ChatOpenAI(
@@ -61,7 +73,7 @@ def get_llm():
                 api_key=api_key
             )
     
-    raise ValueError("No LLM provider available. Please set OPENAI_API_KEY or ANTHROPIC_API_KEY")
+    raise ValueError("No LLM provider available. Please set DEEPSEEK_API_KEY, OPENAI_API_KEY or ANTHROPIC_API_KEY")
 
 
 def validate_sql_with_duckdb(sql: str) -> Dict[str, Any]:

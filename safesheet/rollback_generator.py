@@ -20,8 +20,10 @@ class RollbackGenerator:
         """Generate rollback SQL script using LLM."""
         if self.provider is None:
             raise ValueError(
-                "No LLM API key configured. Please set ANTHROPIC_API_KEY or OPENAI_API_KEY in .env file"
+                "No LLM API key configured. Please set DEEPSEEK_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY in .env file"
             )
+        elif self.provider == "deepseek":
+            return self._generate_with_deepseek(original_sql)
         elif self.provider == "anthropic":
             return self._generate_with_anthropic(original_sql)
         elif self.provider == "openai":
@@ -64,6 +66,70 @@ class RollbackGenerator:
                 raise ValueError("Invalid Anthropic API key. Please check your API key in .env file.")
             else:
                 raise ValueError(f"Anthropic API error: {str(e)}")
+        
+        # Extract SQL from code blocks if present
+        if "```" in rollback_sql:
+            lines = rollback_sql.split("\n")
+            sql_lines = []
+            in_code_block = False
+            for line in lines:
+                if line.strip().startswith("```"):
+                    in_code_block = not in_code_block
+                    continue
+                if in_code_block:
+                    sql_lines.append(line)
+            rollback_sql = "\n".join(sql_lines).strip()
+        
+        return rollback_sql
+
+    def _generate_with_deepseek(self, original_sql: str) -> str:
+        """Generate rollback using DeepSeek-V3.2."""
+        try:
+            from openai import OpenAI, APIError
+        except ImportError:
+            raise ImportError("openai package not installed. Install with: pip install openai")
+
+        endpoint = Config.get_deepseek_endpoint()
+        api_key = Config.get_deepseek_api_key()
+        model = Config.get_deepseek_model()
+        
+        client = OpenAI(
+            base_url=endpoint,
+            api_key=api_key
+        )
+        
+        prompt = self._build_prompt(original_sql)
+        
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a SQL expert specializing in generating idempotent rollback scripts."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.1,
+                max_tokens=2048
+            )
+            
+            rollback_sql = response.choices[0].message.content.strip()
+        except APIError as e:
+            # Handle specific API errors
+            if e.status_code == 429:
+                error_msg = e.response.json() if hasattr(e, 'response') else str(e)
+                raise ValueError(
+                    f"DeepSeek API quota exceeded. Please check your billing. "
+                    f"Error: {error_msg}"
+                )
+            elif e.status_code == 401:
+                raise ValueError("Invalid DeepSeek API key. Please check your API key in .env file.")
+            else:
+                raise ValueError(f"DeepSeek API error: {str(e)}")
         
         # Extract SQL from code blocks if present
         if "```" in rollback_sql:

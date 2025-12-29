@@ -25,14 +25,31 @@ class Config:
         return os.getenv("OPENAI_API_KEY")
 
     @staticmethod
+    def get_deepseek_api_key() -> Optional[str]:
+        """Get DeepSeek API key from environment."""
+        return os.getenv("DEEPSEEK_API_KEY")
+
+    @staticmethod
+    def get_deepseek_endpoint() -> Optional[str]:
+        """Get DeepSeek endpoint URL from environment."""
+        return os.getenv("DEEPSEEK_ENDPOINT", "https://aritraintelligence.services.ai.azure.com/openai/v1/")
+
+    @staticmethod
+    def get_deepseek_model() -> Optional[str]:
+        """Get DeepSeek model name from environment."""
+        return os.getenv("DEEPSEEK_MODEL", "DeepSeek-V3.2")
+
+    @staticmethod
     def get_llm_provider() -> str:
         """Determine which LLM provider to use based on available API keys."""
-        if Config.get_anthropic_api_key():
+        if Config.get_deepseek_api_key():
+            return "deepseek"
+        elif Config.get_anthropic_api_key():
             return "anthropic"
         elif Config.get_openai_api_key():
             return "openai"
         else:
             raise ValueError(
-                "No LLM API key found. Please set ANTHROPIC_API_KEY or OPENAI_API_KEY in .env file"
+                "No LLM API key found. Please set DEEPSEEK_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY in .env file"
             )
 
