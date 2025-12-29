@@ -154,9 +154,24 @@ class SafetyReport:
                 if dry_run.get("estimated_rows_affected") is not None:
                     lines.append(f"  Estimated Rows Affected: {dry_run['estimated_rows_affected']}")
             else:
-                lines.append("  ⚠️  Simulation had issues")
-                if dry_run.get("error"):
-                    lines.append(f"  Error: {dry_run['error']}")
+                # For ALTER and other DDL statements, show analysis instead of just error
+                if dry_run.get("alter_operation"):
+                    lines.append("  📊 ALTER Statement Analysis:")
+                    lines.append(f"  Operation: {dry_run.get('alter_operation', 'Unknown')}")
+                    if dry_run.get("impact_summary"):
+                        lines.append(f"  Impact: {dry_run['impact_summary']}")
+                    if dry_run.get("alter_details", {}).get("columns_affected"):
+                        cols = dry_run["alter_details"]["columns_affected"]
+                        if cols:
+                            lines.append(f"  Columns Affected: {', '.join(cols)}")
+                    if dry_run.get("note"):
+                        lines.append(f"  ℹ️  {dry_run['note']}")
+                elif dry_run.get("note"):
+                    lines.append(f"  ℹ️  {dry_run['note']}")
+                else:
+                    lines.append("  ⚠️  Simulation had issues")
+                    if dry_run.get("error"):
+                        lines.append(f"  Error: {dry_run['error']}")
             lines.append("")
         
         # Rollback Script

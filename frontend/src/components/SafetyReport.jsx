@@ -143,6 +143,34 @@ const SafetyReport = ({ report }) => {
         <div className="report-section">
           <h3>Dry Run Simulation</h3>
           <div className="dry-run-info">
+            {/* ALTER Statement Analysis */}
+            {data.dry_run.alter_operation && (
+              <>
+                <div className="info-item" style={{ gridColumn: '1 / -1', padding: '1.25rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <Info size={18} style={{ color: '#60a5fa' }} />
+                    <label style={{ color: '#60a5fa', fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>ALTER Statement Analysis</label>
+                  </div>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <strong style={{ color: '#cbd5e1' }}>Operation: </strong>
+                    <span style={{ color: '#f8fafc', fontFamily: 'JetBrains Mono, monospace' }}>{data.dry_run.alter_operation}</span>
+                  </div>
+                  {data.dry_run.impact_summary && (
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: '#cbd5e1' }}>Impact: </strong>
+                      <span style={{ color: '#f8fafc' }}>{data.dry_run.impact_summary}</span>
+                    </div>
+                  )}
+                  {data.dry_run.alter_details?.columns_affected?.length > 0 && (
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <strong style={{ color: '#cbd5e1' }}>Columns Affected: </strong>
+                      <span style={{ color: '#f8fafc', fontFamily: 'JetBrains Mono, monospace' }}>{data.dry_run.alter_details.columns_affected.join(', ')}</span>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            
             <div className="info-item">
               <label>Simulation Status:</label>
               <span>
@@ -151,7 +179,7 @@ const SafetyReport = ({ report }) => {
                 ) : (
                   <XCircle size={16} className="error-icon" />
                 )}
-                {data.dry_run.simulation_successful ? 'Successful' : 'Limited (no tables)'}
+                {data.dry_run.simulation_successful ? 'Successful' : data.dry_run.alter_operation ? 'Analysis Complete' : 'Limited (no tables)'}
               </span>
             </div>
             {data.dry_run.estimated_rows_affected !== null && (
@@ -160,13 +188,19 @@ const SafetyReport = ({ report }) => {
                 <span>{data.dry_run.estimated_rows_affected}</span>
               </div>
             )}
-            {data.dry_run.note && (
+            {data.dry_run.note && !data.dry_run.alter_operation && (
               <div className="info-item" style={{ gridColumn: '1 / -1', padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
                 <Info size={16} style={{ marginRight: '0.5rem', display: 'inline-block', color: '#60a5fa' }} />
                 <span style={{ color: '#cbd5e1' }}>{data.dry_run.note}</span>
               </div>
             )}
-            {data.dry_run.error && (
+            {data.dry_run.note && data.dry_run.alter_operation && (
+              <div className="info-item" style={{ gridColumn: '1 / -1', padding: '0.75rem', marginTop: '0.5rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                <Info size={16} style={{ marginRight: '0.5rem', display: 'inline-block', color: '#94a3b8' }} />
+                <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>{data.dry_run.note}</span>
+              </div>
+            )}
+            {data.dry_run.error && !data.dry_run.alter_operation && (
               <div className="error-text" style={{ 
                 background: data.dry_run.note ? 'rgba(59, 130, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)',
                 color: data.dry_run.note ? '#60a5fa' : '#fca5a5',
